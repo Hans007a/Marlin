@@ -22,7 +22,7 @@
 
 #include "../../../inc/MarlinConfig.h"
 
-#if NUM_POSITION_SLOTS
+#if SAVED_POSITIONS
 
 #include "../../../core/language.h"
 #include "../../module/planner.h"
@@ -34,26 +34,28 @@
  *
  *   F<rate>  - Feedrate (optional) for the move back.
  *   S<slot>  - Slot # (0-based) to restore from (default 0).
- *   X Y Z E  - Axes to restore. At least one is required.
+ *   X Y Z    - Axes to restore. At least one is required.
  */
 void GcodeSuite::G61(void) {
 
   const uint8_t slot = parser.byteval('S');
 
-  if (slot >= NUM_POSITION_SLOTS) {
-    SERIAL_ERROR_MSG(MSG_INVALID_POS_SLOT STRINGIFY(NUM_POSITION_SLOTS));
-    return;
-  }
+  #if SAVED_POSITIONS < 256
+    if (slot >= SAVED_POSITIONS) {
+      SERIAL_ERROR_MSG(MSG_INVALID_POS_SLOT STRINGIFY(SAVED_POSITIONS));
+      return;
+    }
+  #endif
 
   // No saved position? No axes being restored?
-  if (!TEST(saved_slots, slot) || !parser.seen("XYZE")) return;
+  if (!TEST(saved_slots, slot) || !parser.seen("XYZ")) return;
 
   // Apply any given feedrate over 0.0
   const float fr = parser.linearval('F');
   if (fr > 0.0) feedrate_mm_s = MMM_TO_MMS(fr);
 
-  SERIAL_ECHOPAIR_F(MSG_RESTORING_POS " S", int(slot));
-  LOOP_XYZE(i) {
+  SERIAL_ECHOPAIR(MSG_RESTORING_POS " S", int(slot));
+  LOOP_XYZ(i) {
     destination[i] = parser.seen(axis_codes[i])
       ? stored_position[slot][i] + parser.value_axis_units((AxisEnum)i)
       : current_position[i];
@@ -66,4 +68,4 @@ void GcodeSuite::G61(void) {
   prepare_move_to_destination();
 }
 
-#endif // NUM_POSITION_SLOTS
+#endif // SAVED_POSITIONS
