@@ -22,35 +22,20 @@
 #pragma once
 
 /**
- * HAL_LPC1768/include/i2c_util.h
+ * feature/z_stepper_align.h
  */
 
-#include "../../../inc/MarlinConfigPre.h"
+#include "../inc/MarlinConfig.h"
 
-#ifndef I2C_MASTER_ID
-  #define I2C_MASTER_ID 1
-#endif
+class ZStepperAlign {
+  public:
+    static xy_pos_t xy[NUM_Z_STEPPER_DRIVERS];
 
-#if I2C_MASTER_ID == 0
-  #define I2CDEV_M LPC_I2C0
-#elif I2C_MASTER_ID == 1
-  #define I2CDEV_M LPC_I2C1
-#elif I2C_MASTER_ID == 2
-  #define I2CDEV_M LPC_I2C2
-#else
-  #error "Master I2C device not defined!"
-#endif
+    #if ENABLED(Z_STEPPER_ALIGN_KNOWN_STEPPER_POSITIONS)
+      static xy_pos_t stepper_xy[NUM_Z_STEPPER_DRIVERS];
+    #endif
 
-#include <lpc17xx_i2c.h>
-#include <lpc17xx_pinsel.h>
-#include <lpc17xx_libcfg_default.h>
+  static void reset_to_default();
+};
 
-#ifdef __cplusplus
-  extern "C" {
-#endif
-
-void configure_i2c(const uint8_t clock_option);
-
-#ifdef __cplusplus
-  }
-#endif
+extern ZStepperAlign z_stepper_align;
